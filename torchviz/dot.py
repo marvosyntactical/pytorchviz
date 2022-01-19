@@ -75,14 +75,17 @@ def make_dot(var, params=None, show_attrs=False, show_saved=False, max_attr_char
     else:
         param_map = {}
 
-    node_attr = dict(style='filled',
-                     shape='box',
-                     align='left',
-                     fontsize='10',
-                     ranksep='0.1',
-                     height='0.2',
-                     fontname='monospace')
-    dot = Digraph(node_attr=node_attr, graph_attr=dict(size="12,12"))
+    node_attr = dict(
+         style='filled',
+         shape='box',
+         align='left',
+         fontsize='10',
+         ranksep='0.1',
+         height='0.2',
+         fontname='monospace',
+         image="",
+     )
+    dot = Digraph(node_attr=node_attr, graph_attr=dict(dpi="384.0"))# size="12,12"))
     seen = set()
 
     def size_to_str(size):
@@ -116,6 +119,7 @@ def make_dot(var, params=None, show_attrs=False, show_saved=False, max_attr_char
                             dot.edge(str(id(fn)), str(id(t)), dir="none")
                             dot.node(str(id(t)), get_var_name(t, name), fillcolor='orange')
 
+
         if hasattr(fn, 'variable'):
             # if grad_accumulator, add the node for `.variable`
             var = fn.variable
@@ -123,8 +127,21 @@ def make_dot(var, params=None, show_attrs=False, show_saved=False, max_attr_char
             dot.node(str(id(var)), get_var_name(var), fillcolor='lightblue')
             dot.edge(str(id(var)), str(id(fn)))
 
+        fn_name = get_fn_name(fn, show_attrs, max_attr_chars)
+
+        # HACK START ==============>>
+        attrs = {}
+        _the_fn_name = str(type(fn).__name__)
+        if "PlotHackFnBackward" in _the_fn_name:
+            # if hasattr(fn, "saved_tensors") and fn.saved_tensors:
+            # saved tensor contains ord values of characters making up png path
+            png = "".join(list(map(chr, list(fn.saved_tensors[0].numpy()))))
+            attrs = {"image": png}
+            fn_name = "" # dont display "PlotHackFnBackward" in the middle of histogram
+        # <============== HACK END
+
         # add the node for this grad_fn
-        dot.node(str(id(fn)), get_fn_name(fn, show_attrs, max_attr_chars))
+        dot.node(str(id(fn)), fn_name, **attrs)
 
         # recurse
         if hasattr(fn, 'next_functions'):
