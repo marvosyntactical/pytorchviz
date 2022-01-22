@@ -1,3 +1,7 @@
+---
+NOTE: This is a Fork of the awesome [PyTorchViz](https://github.com/szagoruyko/pytorchviz/), with an added API for adding histograms to the model graph; See hist\_example.py.
+
+---
 PyTorchViz
 =======
 

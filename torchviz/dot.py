@@ -93,7 +93,7 @@ def make_dot(var, params=None, show_attrs=False, show_saved=False, max_attr_char
 
     def get_var_name(var, name=None):
         if not name:
-            name = param_map[id(var)] if id(var) in param_map else ''
+            name = param_map[id(var)] if id(var) in param_map else 'input'
         return '%s\n %s' % (name, size_to_str(var.size()))
 
     def add_nodes(fn):
@@ -120,19 +120,19 @@ def make_dot(var, params=None, show_attrs=False, show_saved=False, max_attr_char
                             dot.node(str(id(t)), get_var_name(t, name), fillcolor='orange')
 
 
-        if hasattr(fn, 'variable'):
-            # if grad_accumulator, add the node for `.variable`
-            var = fn.variable
-            seen.add(var)
-            dot.node(str(id(var)), get_var_name(var), fillcolor='lightblue')
-            dot.edge(str(id(var)), str(id(fn)))
+        # if hasattr(fn, 'variable'):
+        #     # if grad_accumulator, add the node for `.variable`
+        #     var = fn.variable
+        #     seen.add(var)
+        #     dot.node(str(id(var)), get_var_name(var), fillcolor='lightblue')
+        #     dot.edge(str(id(var)), str(id(fn)))
 
         fn_name = get_fn_name(fn, show_attrs, max_attr_chars)
 
         # HACK START ==============>>
         attrs = {}
         _the_fn_name = str(type(fn).__name__)
-        if "PlotHackFnBackward" in _the_fn_name:
+        if "HistHackFnBackward" in _the_fn_name:
             # if hasattr(fn, "saved_tensors") and fn.saved_tensors:
             # saved tensor contains ord values of characters making up png path
             png = "".join(list(map(chr, list(fn.saved_tensors[0].numpy()))))
@@ -140,8 +140,14 @@ def make_dot(var, params=None, show_attrs=False, show_saved=False, max_attr_char
             fn_name = "" # dont display "PlotHackFnBackward" in the middle of histogram
         # <============== HACK END
 
-        # add the node for this grad_fn
-        dot.node(str(id(fn)), fn_name, **attrs)
+        if hasattr(fn, "variable"):
+            # add lightblue node for this AccumulateGrad function's parameter instead:
+            var = fn.variable
+            seen.add(var)
+            dot.node(str(id(fn)), get_var_name(var), fillcolor='lightblue')
+        else:
+            # add the node for this grad_fn
+            dot.node(str(id(fn)), fn_name, **attrs)
 
         # recurse
         if hasattr(fn, 'next_functions'):
