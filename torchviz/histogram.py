@@ -167,7 +167,7 @@ class HistManager:
             hist_indices: List[int] = [],
             bins: int = 1000,
             hist_superdir: str = "plots",
-            6ecord_input_dists: bool = True,
+            record_input_dists: bool = True,
             record_output_dists: bool = True,
             banned_types: Set[Type] = IGNORED_MODULE_TYPES,
             verbose: bool = False
