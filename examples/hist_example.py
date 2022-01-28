@@ -77,7 +77,8 @@ def main():
         hist_superdir=plot_directory,
         record_input_dists=False,
         record_output_dists=True,
-        verbose=False
+        verbose=False,
+        blitz=False
     )
 
     # let it process our model

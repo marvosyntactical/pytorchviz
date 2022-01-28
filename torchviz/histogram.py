@@ -1,4 +1,4 @@
-from .dot import make_dot
+from .dot import make_dot, make_dot_blitz
 import graphviz
 
 import torch
@@ -170,7 +170,8 @@ class HistManager:
             record_input_dists: bool = True,
             record_output_dists: bool = True,
             banned_types: Set[Type] = IGNORED_MODULE_TYPES,
-            verbose: bool = False
+            verbose: bool = False,
+            blitz: bool = False,
         ):
         """
         :param name: model name; also directory name to cache hists under
@@ -182,6 +183,7 @@ class HistManager:
         :param record_output_dists: whether to add a histogram for each module's output
         :param banned_types: list of nn.module subtypes which should be ignored, e.g. flatten
         :param verbose: NotImplemented
+        :param blitz: blitz compatibility
         :return:
         """
         assert record_input_dists or record_output_dists, f"record at least one type of dist"
@@ -189,6 +191,7 @@ class HistManager:
         self.record_output_dists = record_output_dists
 
         self.banned_types = banned_types
+        self.dotify = make_dot if not blitz else make_dot_blitz
 
         ext = "png" # saves .png images
 
@@ -356,9 +359,11 @@ class HistManager:
         input_data.requires_grad_(True)
         out = model(input_data)
 
-        d = make_dot(
+        d = self.dotify(
             out.mean(),
             params=dict(model.named_parameters()),
+            graph_dir=out_dir,
+            show_saved=False,
         )
         # g = str(d)
         # G = graphviz.Source(g)
